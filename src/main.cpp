@@ -1,10 +1,11 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <cstdint>
 
 struct PositionData {
-  int x = 0;
-  int y = 0;
-  int direction = 0;
+  int16_t x = 0;
+  int16_t y = 0;
+  int16_t direction = 0;
 };
 
 static PositionData targetPosition;
