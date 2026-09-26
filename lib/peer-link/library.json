@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/schema/library.json",
+  "name": "peer-link",
+  "version": "0.1.0",
+  "description": "ESP Now上で動作するP2Pネットワーク構築簡易化ライブラリ",
+  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Netetra/peer-link.git"
+  },
+  "frameworks": "*",
+  "platforms": "*",
+  "headers": ["peer_link.h"]
+}
