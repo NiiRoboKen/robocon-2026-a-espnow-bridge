@@ -4,8 +4,8 @@
 #include <peer_link.h>
 
 const uint8_t WIFI_CHANNEL = 14;
-const peer_id_t FROM_PEER_ID = 0x11;
-const peer_id_t TO_PEER_ID = 0x12;
+const peer_id_t FROM_PEER_ID = 0x12;
+const peer_id_t TO_PEER_ID = 0x11;
 
 const uint8_t MSG_TYPE_POSITION = 0x01;
 
