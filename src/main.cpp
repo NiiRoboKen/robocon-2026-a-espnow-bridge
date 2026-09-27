@@ -1,3 +1,4 @@
+#include "WString.h"
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <cstdint>
@@ -8,7 +9,9 @@ const uint8_t WIFI_CHANNEL = 14;
 const peer_id_t FROM_PEER_ID = 0x12;
 const peer_id_t TO_PEER_ID = 0x11;
 
-const uint8_t MSG_TYPE_POSITION = static_cast<uint8_t>(MessageType::Tablet);
+// RobotState = 0x01,Tablet = 0x02, Gamepad = 0x03,
+// const uint8_t MSG_TYPE_POSITION = static_cast<uint8_t>(MessageType::Tablet);
+const uint8_t MSG_TYPE_POSITION = 0x02;
 
 static String rxBuffer;
 
@@ -40,16 +43,16 @@ void handleJsonLine(const String &line) {
   Serial.println();
 
   if (!doc["type"].isNull()) {
-    const char *type = doc["type"];
+    const String type = doc["type"];
 
-    if (strcmp(type, "position_update") == 0 &&
-        peer_link_is_peer_exist(TO_PEER_ID)) {
+    if (type == "position_update" && peer_link_is_peer_exist(TO_PEER_ID)) {
       JsonObject payload = doc["payload"];
       TabletData targetPosition = {
           static_cast<int16_t>(payload["position"]["x"].as<int>()),
           static_cast<int16_t>(payload["position"]["y"].as<int>()),
           static_cast<int16_t>(payload["direction"].as<int>()),
-          payload["gamepad_use"].as<bool>()};
+          // payload["gamepad_use"].as<bool>()
+          false};
 
       const uint8_t *p = reinterpret_cast<const uint8_t *>(&targetPosition);
       struct Message message = {
@@ -59,6 +62,8 @@ void handleJsonLine(const String &line) {
       std::vector<struct Message> messages;
       messages.push_back(std::move(message));
       peer_link_send(TO_PEER_ID, messages);
+
+      Serial.println("[P2P] send data");
 
     } else {
       Serial.print("     unknown type = ");
