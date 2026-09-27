@@ -1,0 +1,3 @@
+[submodule "include/robocon_2026_utility"]
+	path = include/robocon_2026_utility
+	url = https://github.com/NiiRoboKen/robocon_2026_utility
