@@ -2,13 +2,15 @@
 #include <ArduinoJson.h>
 #include <cstdint>
 #include <peer_link.h>
-#include <robocon_2026_utility/include/message.h>
+// #include <robocon_2026_utility/include/message.h>
+#include <message.h>
 
 const uint8_t WIFI_CHANNEL = 14;
 const peer_id_t FROM_PEER_ID = 0x12;
 const peer_id_t TO_PEER_ID = 0x11;
 
-const uint8_t MSG_TYPE_POSITION = static_cast<uint8_t>(MessageType::Tablet);
+const uint8_t MSG_TYPE_POSITION =
+    static_cast<uint8_t>(MessageType::TabletPos);
 
 static String rxBuffer;
 
@@ -45,20 +47,22 @@ void handleJsonLine(const String &line) {
     if (strcmp(type, "position_update") == 0 &&
         peer_link_is_peer_exist(TO_PEER_ID)) {
       JsonObject payload = doc["payload"];
-      TabletData targetPosition = {
+      TabletData_Pos targetPosition = {
           static_cast<int16_t>(payload["position"]["x"].as<int>()),
           static_cast<int16_t>(payload["position"]["y"].as<int>()),
           static_cast<int16_t>(payload["direction"].as<int>()),
-          payload["gamepad_use"].as<bool>()};
+      };
 
       const uint8_t *p = reinterpret_cast<const uint8_t *>(&targetPosition);
       struct Message message = {
           .type = MSG_TYPE_POSITION,
-          .data = std::vector<uint8_t>(p, p + sizeof(TabletData))};
+          .data = std::vector<uint8_t>(p, p + sizeof(TabletData_Pos))};
 
       std::vector<struct Message> messages;
       messages.push_back(std::move(message));
       peer_link_send(TO_PEER_ID, messages);
+
+      Serial.println("[P2P] message send");
 
     } else {
       Serial.print("     unknown type = ");
