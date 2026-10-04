@@ -2,13 +2,19 @@
 #include <ArduinoJson.h>
 #include <cstdint>
 #include <peer_link.h>
-#include <robocon_2026_utility/include/message.h>
+// #include <robocon_2026_utility/include/message.h>
 
-const uint8_t WIFI_CHANNEL = 14;
 const peer_id_t FROM_PEER_ID = 0x12;
 const peer_id_t TO_PEER_ID = 0x11;
 
-const uint8_t MSG_TYPE_POSITION = static_cast<uint8_t>(MessageType::Tablet);
+// const uint8_t MSG_TYPE_POSITION = static_cast<uint8_t>(MessageType::Tablet);
+const uint8_t MSG_TYPE_POSITION = 0x03;
+
+struct __attribute__((packed)) TabletData {
+  int16_t x;
+  int16_t y;
+  int16_t deg;
+};
 
 static String rxBuffer;
 
@@ -46,10 +52,10 @@ void handleJsonLine(const String &line) {
         peer_link_is_peer_exist(TO_PEER_ID)) {
       JsonObject payload = doc["payload"];
       TabletData targetPosition = {
-          static_cast<int16_t>(payload["position"]["x"].as<int>()),
-          static_cast<int16_t>(payload["position"]["y"].as<int>()),
-          static_cast<int16_t>(payload["direction"].as<int>()),
-          payload["gamepad_use"].as<bool>()};
+          static_cast<int16_t>(payload["x"]),
+          static_cast<int16_t>(payload["y"]),
+          static_cast<int16_t>(payload["direction"]),
+      };
 
       const uint8_t *p = reinterpret_cast<const uint8_t *>(&targetPosition);
       struct Message message = {
