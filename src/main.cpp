@@ -1,69 +1,68 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <cstdint>
+#include <cstring>
 #include <peer_link.h>
 #include <robocon_2026_utility/include/message.h>
+#include <vector>
 
-const uint8_t WIFI_CHANNEL = 14;
-const peer_id_t FROM_PEER_ID = 0x12;
-const peer_id_t TO_PEER_ID = 0x11;
-
-const uint8_t MSG_TYPE_POSITION = static_cast<uint8_t>(MessageType::Tablet);
-
-static String rxBuffer;
+#include "message_codec.h"
 
 static const size_t JSON_CAPACITY = 512;
+static String rxBuffer;
+
+static void sendOne(const Message &message) {
+  if (!peer_link_is_peer_exist(SWERVE_S3_ID)) {
+    emitLog("warn", "peer not found, drop message");
+    return;
+  }
+  std::vector<Message> messages;
+  messages.push_back(message);
+  peer_link_send(SWERVE_S3_ID, messages);
+}
+
+static Message buildPosition(JsonObject payload) {
+  TabletData_Pos pos = {static_cast<int16_t>(payload["x"].as<int>()),
+                        static_cast<int16_t>(payload["y"].as<int>()),
+                        static_cast<int16_t>(payload["direction"].as<int>())};
+  return encodePayload(MessageType::Position, pos);
+}
 
 void handleJsonLine(const String &line) {
   if (line.length() == 0) {
     return;
   }
 
-  Serial.print("[RAW] ");
-  Serial.println(line);
-
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, line);
-
   if (error) {
-    Serial.print("[NG] JSON parse failed: ");
-    Serial.println(error.c_str());
-    Serial.print("     raw = ");
-    Serial.println(line);
+    emitLog("error", error.c_str());
+    emitResendRequest(error.c_str());
+    return;
+  }
+  if (doc["type"].isNull()) {
     return;
   }
 
-  Serial.println("[OK] JSON received successfully");
+  const char *type = doc["type"];
+  JsonObject payload = doc["payload"];
 
-  Serial.print("     data = ");
-  serializeJson(doc, Serial);
-  Serial.println();
-
-  if (!doc["type"].isNull()) {
-    const char *type = doc["type"];
-
-    if (strcmp(type, "position_update") == 0 &&
-        peer_link_is_peer_exist(TO_PEER_ID)) {
-      JsonObject payload = doc["payload"];
-      TabletData targetPosition = {
-          static_cast<int16_t>(payload["position"]["x"].as<int>()),
-          static_cast<int16_t>(payload["position"]["y"].as<int>()),
-          static_cast<int16_t>(payload["direction"].as<int>()),
-          payload["gamepad_use"].as<bool>()};
-
-      const uint8_t *p = reinterpret_cast<const uint8_t *>(&targetPosition);
-      struct Message message = {
-          .type = MSG_TYPE_POSITION,
-          .data = std::vector<uint8_t>(p, p + sizeof(TabletData))};
-
-      std::vector<struct Message> messages;
-      messages.push_back(std::move(message));
-      peer_link_send(TO_PEER_ID, messages);
-
-    } else {
-      Serial.print("     unknown type = ");
-      Serial.println(type);
-    }
+  if (strcmp(type, "gamepad_use") == 0) {
+    sendOne(encodeEmpty(MessageType::GamePadUse));
+  } else if (strcmp(type, "tablet_use") == 0) {
+    sendOne(encodeEmpty(MessageType::TabletUse));
+  } else if (strcmp(type, "position_update") == 0) {
+    sendOne(buildPosition(payload));
+  } else if (strcmp(type, "load_belt") == 0) {
+    sendOne(encodeEmpty(MessageType::LoadBelt));
+  } else if (strcmp(type, "reload_belt") == 0) {
+    sendOne(encodeEmpty(MessageType::ReloadBelt));
+  } else if (strcmp(type, "reload_finish_belt") == 0) {
+    sendOne(encodeEmpty(MessageType::ReloadFinishBelt));
+  } else if (strcmp(type, "launch_belt") == 0) {
+    sendOne(encodeEmpty(MessageType::LaunchBelt));
+  } else {
+    String msg = String("unknown type = ") + type;
+    emitLog("warn", msg.c_str());
   }
 }
 
@@ -73,25 +72,21 @@ void setup() {
     ;
   }
   rxBuffer.reserve(JSON_CAPACITY);
-
-  peer_link_task_init(WIFI_CHANNEL, FROM_PEER_ID);
-
-  Serial.println("ESP32 ready. Send JSON terminated by newline.");
+  peer_link_task_init(WIFI_CHANNEL, TABLET_ESP_ID);
+  emitLog("info", "ESP32 ready");
 }
 
 void loop() {
   while (Serial.available() > 0) {
     char c = (char)Serial.read();
-
     if (c == '\n') {
       rxBuffer.trim();
       handleJsonLine(rxBuffer);
       rxBuffer = "";
     } else {
       rxBuffer += c;
-
       if (rxBuffer.length() > JSON_CAPACITY) {
-        Serial.println("[NG] Input too long, buffer cleared.");
+        emitLog("error", "input too long, buffer cleared");
         rxBuffer = "";
       }
     }
