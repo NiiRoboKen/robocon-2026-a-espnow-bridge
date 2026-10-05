@@ -5,6 +5,7 @@
 #include <robocon_2026_utility/include/message.h>
 #include <vector>
 
+#include "esp_now_io.h"
 #include "message_codec.h"
 
 static const size_t JSON_CAPACITY = 512;
@@ -91,4 +92,5 @@ void loop() {
       }
     }
   }
+  espNowOutputFlush();
 }
