@@ -69,16 +69,6 @@ inline void emitPosition(const TabletData_Pos &pos) {
   Serial.println();
 }
 
-inline void emitLaunchStatus(const BeltElevationAccData &d) {
-  JsonDocument doc;
-  doc["type"] = "launch_status";
-  JsonObject p = doc["payload"].to<JsonObject>();
-  p["launch_pos_belt"] = d.launch_pos_belt;
-  p["acc_pos_belt"] = d.acc_pos_belt;
-  serializeJson(doc, Serial);
-  Serial.println();
-}
-
 inline void emitRaw(uint8_t type, const std::vector<uint8_t> &data) {
   JsonDocument doc;
   doc["type"] = "raw";

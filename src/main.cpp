@@ -28,6 +28,13 @@ static Message buildPosition(JsonObject payload) {
   return encodePayload(MessageType::Position, pos);
 }
 
+static Message buildBeltLaunch(JsonObject payload) {
+  int16_t acceleration = {
+      static_cast<int16_t>(payload["acceleration"].as<int>()),
+  };
+  return encodePayload(MessageType::BeltLaunch, acceleration);
+}
+
 void handleJsonLine(const String &line) {
   if (line.length() == 0) {
     return;
@@ -47,24 +54,50 @@ void handleJsonLine(const String &line) {
   const char *type = doc["type"];
   JsonObject payload = doc["payload"];
 
-  if (strcmp(type, "gamepad_use") == 0) {
-    sendOne(encodeEmpty(MessageType::GamePadUse));
-  } else if (strcmp(type, "tablet_use") == 0) {
-    sendOne(encodeEmpty(MessageType::TabletUse));
-  } else if (strcmp(type, "position_update") == 0) {
+  if (strcmp(type, "target_position") == 0) {
     sendOne(buildPosition(payload));
-  } else if (strcmp(type, "load_belt") == 0) {
-    sendOne(encodeEmpty(MessageType::LoadBelt));
-  } else if (strcmp(type, "reload_belt") == 0) {
-    sendOne(encodeEmpty(MessageType::ReloadBelt));
-  } else if (strcmp(type, "reload_finish_belt") == 0) {
-    sendOne(encodeEmpty(MessageType::ReloadFinishBelt));
-  } else if (strcmp(type, "launch_belt") == 0) {
-    sendOne(encodeEmpty(MessageType::LaunchBelt));
-  } else {
-    String msg = String("unknown type = ") + type;
-    emitLog("warn", msg.c_str());
+    return;
   }
+  if (strcmp(type, "belt_launch") == 0) {
+    sendOne(buildBeltLaunch(payload));
+    return;
+  }
+
+  static const struct {
+    const char *name;
+    MessageType type;
+  } commands[] = {
+      {"gamepad_use", MessageType::GamePadUse},
+      {"tablet_use", MessageType::TabletUse},
+      {"reboot", MessageType::Reboot},
+      {"belt_load", MessageType::BeltLoad},
+      {"belt_reload", MessageType::BeltReload},
+      {"belt_reload_finish", MessageType::BeltReloadFinish},
+      {"belt_desk", MessageType::BeltDesk},
+      {"belt_bucket_low", MessageType::BeltBucket_Low},
+      {"belt_bucket_middle", MessageType::BeltBucket_Middle},
+      {"belt_bucket_high", MessageType::BeltBucket_High},
+      {"belt_frag", MessageType::BeltFrag},
+      {"belt_elevation", MessageType::BeltElevation},
+      {"roller_start", MessageType::RollerStart},
+      {"roller_launch", MessageType::RollerLaunch},
+      {"bucket_low", MessageType::BucketLow},
+      {"bucket_middle", MessageType::BucketMiddle},
+      {"bucket_high", MessageType::BucketHigh},
+      {"bucket_release", MessageType::BucketRelease},
+      {"floor_on", MessageType::FloorOn},
+      {"floor_off", MessageType::FloorOff},
+  };
+
+  for (const auto &cmd : commands) {
+    if (strcmp(type, cmd.name) == 0) {
+      sendOne(encodeEmpty(cmd.type));
+      return;
+    }
+  }
+
+  String msg = String("unknown type = ") + type;
+  emitLog("warn", msg.c_str());
 }
 
 void setup() {

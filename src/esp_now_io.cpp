@@ -17,7 +17,6 @@ template <typename T> struct Latest {
 
 static Latest<StateData> latestState;
 static Latest<TabletData_Pos> latestPosition;
-static Latest<BeltElevationAccData> latestLaunchStatus;
 
 template <typename T> static void store(Latest<T> &slot, const T &value) {
   portENTER_CRITICAL(&storeMux);
@@ -60,15 +59,6 @@ void peer_link_recv_cb(const peer_id_t peer_id,
       }
       break;
     }
-    case MessageType::LaunchStatus: {
-      BeltElevationAccData d;
-      if (decodePayload(m.data, d)) {
-        store(latestLaunchStatus, d);
-      } else {
-        emitRaw(m.type, m.data);
-      }
-      break;
-    }
     default:
       emitRaw(m.type, m.data);
       break;
@@ -86,14 +76,10 @@ void espNowOutputFlush() {
 
   StateData s;
   TabletData_Pos pos;
-  BeltElevationAccData d;
   if (take(latestState, s)) {
     emitStateData(s);
   }
   if (take(latestPosition, pos)) {
     emitPosition(pos);
-  }
-  if (take(latestLaunchStatus, d)) {
-    emitLaunchStatus(d);
   }
 }
