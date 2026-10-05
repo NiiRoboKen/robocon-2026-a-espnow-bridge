@@ -64,7 +64,7 @@ inline void emitPosition(const TabletData_Pos &pos) {
   JsonObject p = doc["payload"].to<JsonObject>();
   p["x"] = pos.x;
   p["y"] = pos.y;
-  p["deg"] = pos.deg;
+  p["direction"] = pos.deg;
   serializeJson(doc, Serial);
   Serial.println();
 }
