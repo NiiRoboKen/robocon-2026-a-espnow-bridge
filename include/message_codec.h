@@ -60,7 +60,7 @@ inline void emitStateData(const StateData &s) {
 
 inline void emitPosition(const TabletData_Pos &pos) {
   JsonDocument doc;
-  doc["type"] = "position";
+  doc["type"] = "position_update";
   JsonObject p = doc["payload"].to<JsonObject>();
   p["x"] = pos.x;
   p["y"] = pos.y;

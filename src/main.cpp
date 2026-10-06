@@ -77,7 +77,7 @@ void handleJsonLine(const String &line) {
       {"belt_bucket_low", MessageType::BeltBucket_Low},
       {"belt_bucket_middle", MessageType::BeltBucket_Middle},
       {"belt_bucket_high", MessageType::BeltBucket_High},
-      {"belt_frag", MessageType::BeltFrag},
+      {"belt_flag", MessageType::BeltFlag},
       {"belt_elevation", MessageType::BeltElevation},
       {"roller_start", MessageType::RollerStart},
       {"roller_launch", MessageType::RollerLaunch},
