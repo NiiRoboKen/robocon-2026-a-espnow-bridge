@@ -8,17 +8,24 @@
 #include "esp_now_io.h"
 #include "message_codec.h"
 
+constexpr peer_id_t LOG_ESP_ID = 0x15;
+
 static const size_t JSON_CAPACITY = 512;
 static String rxBuffer;
 
 static void sendOne(const Message &message) {
-  if (!peer_link_is_peer_exist(SWERVE_S3_ID)) {
-    emitLog("warn", "peer not found, drop message");
-    return;
-  }
   std::vector<Message> messages;
   messages.push_back(message);
-  peer_link_send(SWERVE_S3_ID, messages);
+
+  if (peer_link_is_peer_exist(SWERVE_S3_ID)) {
+    peer_link_send(SWERVE_S3_ID, messages);
+  } else {
+    emitLog("warn", "peer not found, drop message");
+  }
+
+  if (peer_link_is_peer_exist(LOG_ESP_ID)) {
+    peer_link_send(LOG_ESP_ID, messages);
+  }
 }
 
 static Message buildPosition(JsonObject payload) {
@@ -66,28 +73,28 @@ void handleJsonLine(const String &line) {
   static const struct {
     const char *name;
     MessageType type;
-  } commands[] = {
-      {"gamepad_use", MessageType::GamePadUse},
-      {"tablet_use", MessageType::TabletUse},
-      {"reboot", MessageType::Reboot},
-      {"belt_load", MessageType::BeltLoad},
-      {"belt_reload", MessageType::BeltReload},
-      {"belt_reload_finish", MessageType::BeltReloadFinish},
-      {"belt_desk", MessageType::BeltDesk},
-      {"belt_bucket_low", MessageType::BeltBucket_Low},
-      {"belt_bucket_middle", MessageType::BeltBucket_Middle},
-      {"belt_bucket_high", MessageType::BeltBucket_High},
-      {"belt_flag", MessageType::BeltFlag},
-      {"belt_elevation", MessageType::BeltElevation},
-      {"roller_start", MessageType::RollerStart},
-      {"roller_launch", MessageType::RollerLaunch},
-      {"bucket_low", MessageType::BucketLow},
-      {"bucket_middle", MessageType::BucketMiddle},
-      {"bucket_high", MessageType::BucketHigh},
-      {"bucket_release", MessageType::BucketRelease},
-      {"floor_on", MessageType::FloorOn},
-      {"floor_off", MessageType::FloorOff},
-  };
+  } commands[] = {{"gamepad_use", MessageType::GamePadUse},
+                  {"tablet_use", MessageType::TabletUse},
+                  {"reboot", MessageType::Reboot},
+                  {"belt_load", MessageType::BeltLoad},
+                  {"belt_reload", MessageType::BeltReload},
+                  {"belt_reload_finish", MessageType::BeltReloadFinish},
+                  {"belt_desk", MessageType::BeltDesk},
+                  {"belt_bucket_low", MessageType::BeltBucket_Low},
+                  {"belt_bucket_middle", MessageType::BeltBucket_Middle},
+                  {"belt_bucket_high", MessageType::BeltBucket_High},
+                  {"belt_flag", MessageType::BeltFlag},
+                  {"belt_elevation", MessageType::BeltElevation},
+                  {"roller_start", MessageType::RollerStart},
+                  {"roller_launch", MessageType::RollerLaunch},
+                  {"roller_stop", MessageType::RollerStop},
+                  {"bucket_low", MessageType::BucketLow},
+                  {"bucket_middle", MessageType::BucketMiddle},
+                  {"bucket_high", MessageType::BucketHigh},
+                  {"bucket_release", MessageType::BucketRelease},
+                  {"floor_on", MessageType::FloorOn},
+                  {"floor_off", MessageType::FloorOff},
+                  {"stop", MessageType::Stop}};
 
   for (const auto &cmd : commands) {
     if (strcmp(type, cmd.name) == 0) {
