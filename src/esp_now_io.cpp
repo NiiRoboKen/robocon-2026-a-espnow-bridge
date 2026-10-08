@@ -6,7 +6,7 @@
 #include "esp_now_io.h"
 #include "message_codec.h"
 
-static const unsigned long OUTPUT_INTERVAL_MS = 200;
+static const unsigned long OUTPUT_INTERVAL_MS = 50;
 
 static portMUX_TYPE storeMux = portMUX_INITIALIZER_UNLOCKED;
 
