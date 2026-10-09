@@ -48,6 +48,7 @@ inline void emitStateData(const StateData &s) {
   doc["type"] = "robot_state";
   JsonObject p = doc["payload"].to<JsonObject>();
   p["gamepad_used"] = s.gamepad_used;
+  p["roller_reach"] = s.rolelr_reach;
   serializeJson(doc, Serial);
   Serial.println();
 }
