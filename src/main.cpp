@@ -80,9 +80,6 @@ void handleJsonLine(const String &line) {
                   {"load_chanber", MessageType::LoadChamber},
                   {"unload_mag", MessageType::UnloadMag},
                   {"load_mag", MessageType::LoadMag},
-                  {"belt_load", MessageType::BeltLoad},
-                  {"belt_reload", MessageType::BeltReload},
-                  {"belt_reload_finish", MessageType::BeltReloadFinish},
                   {"belt_desk", MessageType::BeltDesk},
                   {"belt_bucket_low", MessageType::BeltBucket_Low},
                   {"belt_bucket_middle", MessageType::BeltBucket_Middle},
@@ -96,8 +93,6 @@ void handleJsonLine(const String &line) {
                   {"bucket_middle", MessageType::BucketMiddle},
                   {"bucket_high", MessageType::BucketHigh},
                   {"bucket_release", MessageType::BucketRelease},
-                  {"floor_on", MessageType::FloorOn},
-                  {"floor_off", MessageType::FloorOff},
                   {"stop", MessageType::Stop}};
 
   for (const auto &cmd : commands) {
