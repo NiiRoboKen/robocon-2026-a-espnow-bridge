@@ -36,10 +36,18 @@ static Message buildPosition(JsonObject payload) {
 }
 
 static Message buildBeltLaunch(JsonObject payload) {
-  int16_t acceleration = {
-      static_cast<int16_t>(payload["acceleration"].as<int>()),
-  };
+  uint16_t acceleration = static_cast<uint16_t>(payload["acceleration"].as<int>());
   return encodePayload(MessageType::BeltLaunch, acceleration);
+}
+
+static Message buildElevationUp(JsonObject payload) {
+  uint16_t elevation = static_cast<uint16_t>(payload["elevation"].as<int>());
+  return encodePayload(MessageType::ELEVATION_UP, elevation);
+}
+
+static Message buildElevationDown(JsonObject payload) {
+  uint16_t elevation = static_cast<uint16_t>(payload["elevation"].as<int>());
+  return encodePayload(MessageType::ELEVATION_DOWN, elevation);
 }
 
 void handleJsonLine(const String &line) {
@@ -67,6 +75,14 @@ void handleJsonLine(const String &line) {
   }
   if (strcmp(type, "belt_launch") == 0) {
     sendOne(buildBeltLaunch(payload));
+    return;
+  }
+  if (strcmp(type, "elevation_up") == 0) {
+    sendOne(buildElevationUp(payload));
+    return;
+  }
+  if (strcmp(type, "elevation_down") == 0) {
+    sendOne(buildElevationDown(payload));
     return;
   }
 
@@ -117,19 +133,20 @@ void setup() {
 }
 
 void loop() {
-  while (Serial.available() > 0) {
-    char c = (char)Serial.read();
-    if (c == '\n') {
-      rxBuffer.trim();
-      handleJsonLine(rxBuffer);
-      rxBuffer = "";
-    } else {
-      rxBuffer += c;
-      if (rxBuffer.length() > JSON_CAPACITY) {
-        emitLog("error", "input too long, buffer cleared");
-        rxBuffer = "";
-      }
-    }
-  }
-  espNowOutputFlush();
+  // while (Serial.available() > 0) {
+  //   char c = (char)Serial.read();
+  //   if (c == '\n') {
+  //     rxBuffer.trim();
+  //     handleJsonLine(rxBuffer);
+  //     rxBuffer = "";
+  //   } else {
+  //     rxBuffer += c;
+  //     if (rxBuffer.length() > JSON_CAPACITY) {
+  //       emitLog("error", "input too long, buffer cleared");
+  //       rxBuffer = "";
+  //     }
+  //   }
+  // }
+  // espNowOutputFlush();
+  ;
 }
