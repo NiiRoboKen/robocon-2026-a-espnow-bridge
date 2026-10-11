@@ -36,7 +36,8 @@ static Message buildPosition(JsonObject payload) {
 }
 
 static Message buildBeltLaunch(JsonObject payload) {
-  uint16_t acceleration = static_cast<uint16_t>(payload["acceleration"].as<int>());
+  uint16_t acceleration =
+      static_cast<uint16_t>(payload["acceleration"].as<int>());
   return encodePayload(MessageType::BeltLaunch, acceleration);
 }
 
@@ -92,6 +93,7 @@ void handleJsonLine(const String &line) {
   } commands[] = {{"gamepad_use", MessageType::GamePadUse},
                   {"tablet_use", MessageType::TabletUse},
                   {"reboot", MessageType::Reboot},
+                  {"stm_reset", MessageType::STM_RESET},
                   {"unload_chanber", MessageType::UnloadChanber},
                   {"load_chanber", MessageType::LoadChamber},
                   {"unload_mag", MessageType::UnloadMag},
@@ -133,20 +135,19 @@ void setup() {
 }
 
 void loop() {
-  // while (Serial.available() > 0) {
-  //   char c = (char)Serial.read();
-  //   if (c == '\n') {
-  //     rxBuffer.trim();
-  //     handleJsonLine(rxBuffer);
-  //     rxBuffer = "";
-  //   } else {
-  //     rxBuffer += c;
-  //     if (rxBuffer.length() > JSON_CAPACITY) {
-  //       emitLog("error", "input too long, buffer cleared");
-  //       rxBuffer = "";
-  //     }
-  //   }
-  // }
-  // espNowOutputFlush();
-  ;
+  while (Serial.available() > 0) {
+    char c = (char)Serial.read();
+    if (c == '\n') {
+      rxBuffer.trim();
+      handleJsonLine(rxBuffer);
+      rxBuffer = "";
+    } else {
+      rxBuffer += c;
+      if (rxBuffer.length() > JSON_CAPACITY) {
+        emitLog("error", "input too long, buffer cleared");
+        rxBuffer = "";
+      }
+    }
+  }
+  espNowOutputFlush();
 }
